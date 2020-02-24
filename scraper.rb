@@ -2,39 +2,43 @@ require 'nokogiri'
 require 'httparty'
 require 'byebug'
 
-def scraper
-  url = "http://blockwork.ai//"
+def single_page_scraper(url, css_div)
   unparsed_page = HTTParty.get(url)
   parsed_page = Nokogiri::HTML(unparsed_page)
-  jobs = Array.new
-  job_listings = parsed_page.css('div.listingCard')
-  page = 1
-  per_page = job_listings.count
-  total = parsed_page.css('div.job-count').text.split(' ')[1].gsub(',','').to_i
-  last_page = (total.to_f / per_page.to_f).round
+  phrases = Array.new
+  phrases_listings = parsed_page.css(css_div)
 
-  while page <= last_page
-    pagination_url = "http://blockwork.ai/listings?page=#{page}"
-    puts pagination_url
-    puts "Page: #{page}"
-    puts ''
-    pagination_unparsed_page = HTTParty.get(pagination_url)
-    pagination_parsed_page = Nokogiri::HTML(pagination_unparsed_page)
-    pagination_job_listings = pagination_parsed_page.css('div.listingCard')
-    pagination_job_listings.each do |job_listing|
-      job = { 
-        title: job_listing.css('span.job-title').text,
-        company: job_listing.css('span.company').text,
-        location: job_listing.css('span.location').text,
-        url: "https://blockwork.ai" + job_listing.css('a')[0].attributes["href"].value
-      }
-      jobs << job
-      puts "Added #{job[:title]}"
-      puts ""
-    end
-    page += 1
+  phrases_listings.each do |phrase|
+    phrases << phrase.text.gsub(/\s+/, " ")
   end
   byebug
 end
 
-scraper
+def all_site_scraper(url, css_div, total_pages)
+  phrases = Array.new
+  page = 1
+  
+  while page <= total_pages
+    pagination_url = "#{url}#{page}"
+    pagination_unparsed_page = HTTParty.get(pagination_url)
+    pagination_parsed_page = Nokogiri::HTML(pagination_unparsed_page)
+    pagination_phrases_listings = pagination_parsed_page.css(css_div)
+
+    pagination_phrases_listings.each do |phrase|
+      phrases << phrase.text.gsub(/\s+/, " ")
+    end
+    puts "Adicionado página: #{page}"
+    page += 1
+  end
+  create_file(phrases)
+  byebug
+
+end
+
+def create_file(array)
+  File.open("Frases.txt", 'w') do |file|
+    file.puts array
+  end
+end
+
+all_site_scraper('https://www.frasesdobem.com.br/frases-de-aniversario/page/', 'p.frase', 3)
