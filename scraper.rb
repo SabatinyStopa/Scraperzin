@@ -11,7 +11,10 @@ def single_page_scraper(url, css_div)
   phrases_listings.each do |phrase|
     phrases << phrase.text.gsub(/\s+/, " ")
   end
-  byebug
+  puts "Adicionado a página"
+  create_file(phrases)
+  puts "Criado arquivo. Da uma olhada lá"
+  puts "Obrigado!"
 end
 
 def all_site_scraper(url, css_div, total_pages)
@@ -31,7 +34,8 @@ def all_site_scraper(url, css_div, total_pages)
     page += 1
   end
   create_file(phrases)
-  byebug
+  puts "Criado arquivo. Da uma olhada lá"
+  puts "Obrigado!"
 
 end
 
@@ -41,4 +45,30 @@ def create_file(array)
   end
 end
 
-all_site_scraper('https://www.frasesdobem.com.br/frases-de-aniversario/page/', 'p.frase', 3)
+def menu
+  while(true)
+    puts "Digite 1 para buscar no site todo ou 2 para uma página única"
+    value = gets.chomp
+    if value == "1"
+      puts "Site todo escolhido."
+      puts "Digite a url do site: "
+      url = gets.chomp
+      puts "Digite a classe: (ex: p.frase)"
+      css_div = gets.chomp
+      puts "Total de páginas que você quer: "
+      total_pages = gets.chomp
+      all_site_scraper(url, css_div, total_pages.to_i)
+    else
+      puts "Uma página apenas escolhida."
+      puts "Digite a url do site: "
+      url = gets.chomp
+      puts "Digite a classe: (ex: p.frase)"
+      css_div = gets.chomp
+      single_page_scraper(url, css_div)
+    end
+  end
+end
+
+menu
+
+# ('https://www.frasesdobem.com.br/frases-de-aniversario/page/1', 'p.frase')
